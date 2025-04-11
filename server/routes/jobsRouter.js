@@ -12,5 +12,8 @@ import {
 router.route("/").post(createJob).get(getAllJobs);
 router.route("/stats").get(showStats); // must be before the dynamic-route (:id)
 router.route("/:id").delete(deleteJob).patch(updateJob);
+// get all jobs
+router.get("/", getAllJobs);
+
 
 export default router;
