@@ -1,1 +1,8 @@
-GET https://cuvette-backend-7jzf.onrender.com/api/v1/jobs?status=all&jobType=all&page=1
+POST https://cuvette-backend-7jzf.onrender.com/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "email": "jest@example.com",
+  "password": "password"
+}

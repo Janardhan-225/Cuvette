@@ -34,8 +34,7 @@ import {
 } from "./actions";
 import reducer from "./reducer";
 
-const BASE_URL = process.env.REACT_APP_API_URL; // Set the base URL for axios requests
-
+// Removed duplicate BASE_URL declaration
 // ----------Local Storage------------- //
 const token = localStorage.getItem("token");
 const user = JSON.parse(localStorage.getItem("user"));
@@ -80,7 +79,7 @@ const AppProvider = ({ children }) => {
 
   // -------------------axios---------------------- //
   const authFetch = axios.create({
-    baseURL: BASE_URL,
+    baseURL: "https://cuvette-backend-7jzf.onrender.com/api/v1", // Use the correct BASE_URL directly
     withCredentials: true,
   });
 
@@ -129,54 +128,59 @@ const AppProvider = ({ children }) => {
     localStorage.removeItem("location");
   };
 
-  const registerUser = async (currentUser) => {
-    dispatch({ type: REGISTER_USER_BEGIN });
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/auth/register`,
-        currentUser
-      );
-      const { user, token, location } = response.data;
-      dispatch({
-        type: REGISTER_USER_SUCCESS,
-        payload: { user, token, location },
-      });
-      addUserToLocalStorage({ user, token, location });
-    } catch (error) {
-      const errorMessage =
-        error.response && error.response.data && error.response.data.msg
-          ? error.response.data.msg
-          : "Something went wrong. Please try again.";
-      dispatch({
-        type: REGISTER_USER_ERROR,
-        payload: { msg: errorMessage },
-      });
-    }
-    clearAlert();
-  };
+// ✅ CORRECT BASE URL (MUST INCLUDE /api/v1)
+const BASE_URL = "https://cuvette-backend-7jzf.onrender.com/api/v1";
 
-  const loginUser = async (currentUser) => {
-    dispatch({ type: LOGIN_USER_BEGIN });
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/auth/login`,
-        currentUser
-      );
-      const { user, token, location } = response.data;
-      dispatch({
-        type: LOGIN_USER_SUCCESS,
-        payload: { user, token, location },
-      });
-      addUserToLocalStorage({ user, token, location });
-    } catch (error) {
-      dispatch({
-        type: LOGIN_USER_ERROR,
-        payload: { msg: error.response.data.msg },
-      });
-    }
-    clearAlert();
-  };
+const registerUser = async (currentUser) => {
+  dispatch({ type: REGISTER_USER_BEGIN });
+  try {
+    // ✅ Verified endpoint: /api/v1/auth/register
+    const response = await axios.post(
+      `${BASE_URL}/auth/register`,
+      currentUser,
+      {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true
+      }
+    );
 
+    const { user, token, location } = response.data;
+    dispatch({ type: REGISTER_USER_SUCCESS, payload: { user, token, location } });
+    addUserToLocalStorage({ user, token, location });
+    
+  } catch (error) {
+    // ✅ Enhanced error handling
+    const errorMessage = error.response?.data?.msg || 
+      `Registration failed: ${error.message || 'Server unreachable'}`;
+    dispatch({ type: REGISTER_USER_ERROR, payload: { msg: errorMessage } });
+  }
+  clearAlert();
+};
+
+const loginUser = async (currentUser) => {
+  dispatch({ type: LOGIN_USER_BEGIN });
+  try {
+    // ✅ Verified endpoint: /api/v1/auth/login
+    const response = await axios.post(
+      `${BASE_URL}/auth/login`,
+      currentUser,
+      {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true
+      }
+    );
+
+    const { user, token, location } = response.data;
+    dispatch({ type: LOGIN_USER_SUCCESS, payload: { user, token, location } });
+    addUserToLocalStorage({ user, token, location });
+    
+  } catch (error) {
+    const errorMessage = error.response?.data?.msg || 
+      `Login failed: ${error.message || 'Check network connection'}`;
+    dispatch({ type: LOGIN_USER_ERROR, payload: { msg: errorMessage } });
+  }
+  clearAlert();
+};
   const updateUser = async (currentUser) => {
     dispatch({ type: UPDATE_USER_BEGIN });
     try {
