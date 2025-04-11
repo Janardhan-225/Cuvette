@@ -33,18 +33,16 @@ app.use(helmet());
 app.use(xss());
 app.use(mongoSanitize());
 
-// Updated CORS configuration
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"], // ✅ Add allowed headers
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
 
-app.use(cors(corsOptions)); // Use CORS middleware with options
-app.options("*", cors(corsOptions)); // Handle preflight requests
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Enable preflight requests for all routes
+ // Handle preflight requests
 
 // ------------ ROUTES ------------ //
 app.use(express.static(path.resolve(__dirname, "../client/build")));
