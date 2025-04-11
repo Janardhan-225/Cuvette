@@ -21,60 +21,71 @@ import { dirname } from "path";
 import { fileURLToPath } from "url";
 import path from "path";
 
-const PORT = process.env.PORT || 5000; // Correct variable name
+const PORT = process.env.PORT || 5000;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ------------ MIDDLEWARE ------------ //
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
+
+// Security middleware
 app.use(express.json());
 app.use(helmet());
 app.use(xss());
 app.use(mongoSanitize());
 
+// CORS Configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "*",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Add OPTIONS for preflight
-    allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Enable preflight requests for all routes
- // Handle preflight requests
+app.options("*", cors(corsOptions)); // Handle preflight requests
 
 // ------------ ROUTES ------------ //
+// API Routes
 app.get("/api/v1", (req, res) => {
-  res.json("Welcome!");
+  res.json({ message: "Welcome to Jobify API!" });
 });
+
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/jobs", authenticateUser, jobsRouter);
 
-// React client fallback
-app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
-});
+// Static files (React build) - Only in production
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.resolve(__dirname, "../client/build")));
+  
+  // React client fallback
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
+  });
+}
 
+// ------------ ERROR HANDLERS ------------ //
 app.use(notFoundMiddleware);
 app.use(errorHandlerMiddleware);
 
-// ------------ DB CONNECT & START ------------ //
+// ------------ DATABASE & SERVER ------------ //
 const start = async () => {
   try {
     if (!process.env.MONGO_URL) {
       throw new Error("MONGO_URL is not defined in .env file");
     }
 
-    mongoose.set("strictQuery", true); // Suppress Mongoose warning
-    console.log("Connecting to:", process.env.MONGO_URL);
+    mongoose.set("strictQuery", true);
     await mongoose.connect(process.env.MONGO_URL);
+    console.log("✅ Database connected successfully");
 
-    app.listen(PORT, () =>
-      console.log(`✅ Server is running at http://localhost:${PORT}`)
+    app.listen(PORT, () => 
+      console.log(`🚀 Server running on port ${PORT}`)
     );
   } catch (error) {
     console.error("❌ Failed to start server:", error.message);
+    process.exit(1);
   }
 };
 

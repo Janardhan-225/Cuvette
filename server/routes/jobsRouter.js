@@ -15,7 +15,7 @@ router.route("/:id").delete(deleteJob).patch(updateJob);
 // get all jobs
 router.get("/", getAllJobs);
 // Example Express route in your backend
-app.get('/api/v1/jobs', async (req, res) => {
+router.get('/api/v1/jobs', async (req, res) => {
   try {
     const jobs = await Jobs.find({});
     res.status(200).json({ jobs });
