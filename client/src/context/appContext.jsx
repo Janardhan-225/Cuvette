@@ -81,14 +81,13 @@ const AppProvider = ({ children }) => {
   // -------------------axios---------------------- //
   // creating Setup Instance with header for requests
   const authFetch = axios.create({
-    baseURL: "https://cuvette-2-qwtm.onrender.com/api/v1", // Correct backend URL
-    withCredentials: true, // Include credentials (if needed)
+    baseURL: "https://cuvette-2-qwtm.onrender.com/api/v1", // Ensure this matches your backend URL
+    withCredentials: true, // Include credentials if needed
   });
   // request Interceptors: https://axios-http.com/docs/interceptors
   authFetch.interceptors.request.use(
     (config) => {
-      config.headers.common["Authorization"] = `Bearer ${state.token}`;
-      console.log("Token:", state.token);
+      config.headers.common["Authorization"] = `Bearer ${state.token}`; // Attach token to every request
       return config;
     },
     (error) => {
@@ -101,10 +100,8 @@ const AppProvider = ({ children }) => {
       return response;
     },
     (error) => {
-      console.log(error.response);
-      // deal with 404(NOT_FOUND) error which means UNAUTHORIZED (no token)
       if (error.response.status === 401) {
-        logoutUser();
+        logoutUser(); // Log out the user if the token is invalid
       }
       return Promise.reject(error);
     }
@@ -147,6 +144,7 @@ const AppProvider = ({ children }) => {
         payload: { user, token, location },
       });
       addUserToLocalStorage({ user, token, location });
+      console.log("Token after registration:", state.token);
     } catch (error) {
       const errorMessage =
         error.response && error.response.data && error.response.data.msg

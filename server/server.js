@@ -34,11 +34,14 @@ app.use(xss());
 app.use(mongoSanitize());
 
 // Updated CORS configuration
-const corsOptions = {
-  origin: "http://localhost:3000", // Allow requests from this origin
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"], // Allowed HTTP methods
-  credentials: true, // Allow cookies and credentials
-};
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"], // ✅ Add allowed headers
+    credentials: true,
+  })
+);
 
 app.use(cors(corsOptions)); // Use CORS middleware with options
 app.options("*", cors(corsOptions)); // Handle preflight requests
