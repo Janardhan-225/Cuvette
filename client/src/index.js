@@ -5,7 +5,7 @@ import "./index.css";
 import axios from 'axios';
 import App from "./App";
 import { AppProvider } from "./context/appContext";
-
+<link rel="icon" type="image/png" href="./logo192.png" />
 
 axios.defaults.baseURL = "[https://cuvette-2-qwtm.onrender.com](https://cuvette-2-qwtm.onrender.com)";
 const root = ReactDOM.createRoot(document.getElementById("root"));

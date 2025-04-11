@@ -30,6 +30,13 @@
       "react-app/jest"
     ]
   },
+  "icons": [
+    {
+      "src": "./logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ],
   "browserslist": {
     "production": [
       ">0.2%",

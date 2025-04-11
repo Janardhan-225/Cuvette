@@ -33,7 +33,7 @@ import {
   CHANGE_PAGE,
 } from "./actions";
 import reducer from "./reducer";
-axios.defaults.baseURL = "[https://cuvette-2-qwtm.onrender.com](https://cuvette-2-qwtm.onrender.com)";
+axios.defaults.baseURL = "https://cuvette-2-qwtm.onrender.com"; // Set the base URL for axios requests
 
 // ----------Local Storage------------- //
 const token = localStorage.getItem("token");
@@ -81,12 +81,14 @@ const AppProvider = ({ children }) => {
   // -------------------axios---------------------- //
   // creating Setup Instance with header for requests
   const authFetch = axios.create({
-    baseURL: "/api/v1",
+    baseURL: "https://cuvette-2-qwtm.onrender.com/api/v1", // Correct backend URL
+    withCredentials: true, // Include credentials (if needed)
   });
   // request Interceptors: https://axios-http.com/docs/interceptors
   authFetch.interceptors.request.use(
     (config) => {
       config.headers.common["Authorization"] = `Bearer ${state.token}`;
+      console.log("Token:", state.token);
       return config;
     },
     (error) => {
@@ -135,7 +137,10 @@ const AppProvider = ({ children }) => {
   const registerUser = async (currentUser) => {
     dispatch({ type: REGISTER_USER_BEGIN });
     try {
-      const response = await axios.post(`/api/v1/auth/register`, currentUser);
+      const response = await axios.post(
+        "https://cuvette-2-qwtm.onrender.com/api/v1/auth/register", // Correct backend URL
+        currentUser
+      );
       const { user, token, location } = response.data;
       dispatch({
         type: REGISTER_USER_SUCCESS,
@@ -143,9 +148,13 @@ const AppProvider = ({ children }) => {
       });
       addUserToLocalStorage({ user, token, location });
     } catch (error) {
+      const errorMessage =
+        error.response && error.response.data && error.response.data.msg
+          ? error.response.data.msg
+          : "Something went wrong. Please try again.";
       dispatch({
         type: REGISTER_USER_ERROR,
-        payload: { msg: error.response.data.msg },
+        payload: { msg: errorMessage },
       });
     }
     clearAlert();

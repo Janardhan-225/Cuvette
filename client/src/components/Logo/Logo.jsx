@@ -1,4 +1,4 @@
-import logo from "../../assets/images/logo.png";
+
 import React from "react";
 import { FaRocket, FaFeatherAlt } from "react-icons/fa";
 
