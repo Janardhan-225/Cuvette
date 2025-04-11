@@ -33,7 +33,8 @@ import {
   CHANGE_PAGE,
 } from "./actions";
 import reducer from "./reducer";
-axios.defaults.baseURL = "https://cuvette-2-qwtm.onrender.com"; // Set the base URL for axios requests
+
+const BASE_URL = process.env.REACT_APP_API_URL; // Set the base URL for axios requests
 
 // ----------Local Storage------------- //
 const token = localStorage.getItem("token");
@@ -49,7 +50,7 @@ const initialState = {
   token: token,
   userLocation: userLocation || "",
   showSidebar: false,
-  isEditing: false, // edit vs create job
+  isEditing: false,
   editJobId: "",
   position: "",
   company: "",
@@ -64,7 +65,6 @@ const initialState = {
   page: 1,
   stats: {},
   monthlyApplications: [],
-  // initial values for Job-searching
   search: "",
   searchStatus: "all",
   searchType: "all",
@@ -74,34 +74,33 @@ const initialState = {
 
 const AppContext = createContext();
 
+
 const AppProvider = ({ children }) => {
-  // const [state, setState] = useState(initialState);
   const [state, dispatch] = useReducer(reducer, initialState);
 
   // -------------------axios---------------------- //
-  // creating Setup Instance with header for requests
   const authFetch = axios.create({
-    baseURL: "https://cuvette-2-qwtm.onrender.com/api/v1", // Ensure this matches your backend URL
-    withCredentials: true, // Include credentials if needed
+    baseURL: BASE_URL,
+    withCredentials: true,
   });
-  // request Interceptors: https://axios-http.com/docs/interceptors
+
   authFetch.interceptors.request.use(
     (config) => {
-      config.headers.common["Authorization"] = `Bearer ${state.token}`; // Attach token to every request
+      config.headers.common["Authorization"] = `Bearer ${state.token}`;
       return config;
     },
     (error) => {
       return Promise.reject(error);
     }
   );
-  // response Interceptors
+
   authFetch.interceptors.response.use(
     (response) => {
       return response;
     },
     (error) => {
       if (error.response.status === 401) {
-        logoutUser(); // Log out the user if the token is invalid
+        logoutUser();
       }
       return Promise.reject(error);
     }
@@ -130,12 +129,11 @@ const AppProvider = ({ children }) => {
     localStorage.removeItem("location");
   };
 
-  // handling register logic from register page
   const registerUser = async (currentUser) => {
     dispatch({ type: REGISTER_USER_BEGIN });
     try {
       const response = await axios.post(
-        "https://cuvette-2-qwtm.onrender.com/api/v1/auth/register", // Correct backend URL
+        `${BASE_URL}/auth/register`,
         currentUser
       );
       const { user, token, location } = response.data;
@@ -144,7 +142,6 @@ const AppProvider = ({ children }) => {
         payload: { user, token, location },
       });
       addUserToLocalStorage({ user, token, location });
-      console.log("Token after registration:", state.token);
     } catch (error) {
       const errorMessage =
         error.response && error.response.data && error.response.data.msg
@@ -161,7 +158,10 @@ const AppProvider = ({ children }) => {
   const loginUser = async (currentUser) => {
     dispatch({ type: LOGIN_USER_BEGIN });
     try {
-      const response = await axios.post(`/api/v1/auth/login`, currentUser);
+      const response = await axios.post(
+        `${BASE_URL}/auth/login`,
+        currentUser
+      );
       const { user, token, location } = response.data;
       dispatch({
         type: LOGIN_USER_SUCCESS,
@@ -189,7 +189,6 @@ const AppProvider = ({ children }) => {
       });
       addUserToLocalStorage({ user, location, token });
     } catch (error) {
-      // deal with user only if it's 400(BAD_REQUEST) as 404(NOT_FOUND) means UNAUTHORIZED (no token)
       if (error.response.status !== 401) {
         dispatch({
           type: UPDATE_USER_ERROR,
@@ -208,11 +207,9 @@ const AppProvider = ({ children }) => {
     removeUserFromLocalStorage();
   };
 
-  // for creating/updating a job
   const handleChange = ({ name, value }) => {
     dispatch({ type: HANDLE_CHANGE, payload: { name, value } });
   };
-  // for clearing job-form
   const clearValues = () => {
     dispatch({ type: CLEAR_VALUES });
   };
@@ -220,7 +217,6 @@ const AppProvider = ({ children }) => {
     dispatch({ type: CREATE_JOB_BEGIN });
 
     try {
-      // first get the form-values from the state
       const { position, company, jobLocation, jobType, status } = state;
 
       await authFetch.post("/jobs", {
@@ -234,7 +230,6 @@ const AppProvider = ({ children }) => {
         type: CREATE_JOB_SUCCESS,
       });
 
-      // call function instead clearValues()
       dispatch({ type: CLEAR_VALUES });
     } catch (error) {
       if (error.response.status === 401) return;
@@ -244,7 +239,7 @@ const AppProvider = ({ children }) => {
       });
     }
 
-    clearAlert(); // at the end
+    clearAlert();
   };
 
   const getJobs = async () => {
@@ -269,14 +264,12 @@ const AppProvider = ({ children }) => {
         },
       });
     } catch (error) {
-      console.log(error.response);
-      logoutUser(); // as there's something wrong with the server
+      logoutUser();
     }
 
-    clearAlert(); // SCENARIO: if user added a job then went to all-jobs page before the request is done
+    clearAlert();
   };
 
-  // first getting the details of the job to form-inputs & state, then edit-functionality
   const setEditJob = (id) => {
     dispatch({ type: SET_EDIT_JOB, payload: { id } });
   };
@@ -311,7 +304,7 @@ const AppProvider = ({ children }) => {
     dispatch({ type: DELETE_JOB_BEGIN });
     try {
       await authFetch.delete(`/jobs/${jobId}`);
-      getJobs(); // re-update jobs showing
+      getJobs();
     } catch (error) {
       logoutUser();
     }
@@ -371,7 +364,6 @@ const AppProvider = ({ children }) => {
   );
 };
 
-// Hook for importing state
 const useAppContext = () => useContext(AppContext);
 
 export { AppProvider, initialState, useAppContext };
