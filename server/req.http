@@ -1,3 +1,1 @@
-curl -X POST https://cuvette-2-qwtm.onrender.com/api/v1/auth/register \
--H "Content-Type: application/json" \
--d '{"name": "jeni", "email": "adithyabablu2003@gmail.com", "password": "123456"}'
+GET https://cuvette-backend-7jzf.onrender.com/api/v1/jobs?status=all&jobType=all&page=1

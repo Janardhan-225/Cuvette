@@ -35,8 +35,8 @@ app.use(mongoSanitize());
 
 const corsOptions = {
   origin: process.env.FRONTEND_URL || "*",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Add OPTIONS for preflight
+    allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
 
@@ -45,7 +45,6 @@ app.options("*", cors(corsOptions)); // Enable preflight requests for all routes
  // Handle preflight requests
 
 // ------------ ROUTES ------------ //
-app.use(express.static(path.resolve(__dirname, "../client/build")));
 app.get("/api/v1", (req, res) => {
   res.json("Welcome!");
 });
