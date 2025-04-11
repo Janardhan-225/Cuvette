@@ -1,0 +1,8 @@
+.transition-all {
+    transition: all 0.3s ease;
+  }
+  
+  .hover-shadow-xl:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15) !important;
+  }
