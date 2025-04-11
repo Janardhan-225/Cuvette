@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer } from "react";
+import axios from 'axios';
 
-import axios from "axios";
 import {
   CLEAR_ALERT,
   DISPLAY_ALERT,
@@ -33,6 +33,7 @@ import {
   CHANGE_PAGE,
 } from "./actions";
 import reducer from "./reducer";
+axios.defaults.baseURL = "[https://cuvette-2-qwtm.onrender.com](https://cuvette-2-qwtm.onrender.com)";
 
 // ----------Local Storage------------- //
 const token = localStorage.getItem("token");
