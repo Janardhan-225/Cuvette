@@ -34,26 +34,36 @@ import {
 } from "./actions";
 import reducer from "./reducer";
 
-// Removed duplicate BASE_URL declaration
-// ----------Local Storage------------- //
-const token = localStorage.getItem("token");
-const user = JSON.parse(localStorage.getItem("user"));
-const userLocation = localStorage.getItem("location");
+const BASE_URL = "https://cuvette-backend-7jzf.onrender.com/api/v1";
+/// ---------- Local Storage Handling (Safe Parsing) ---------- //
+const getStoredUser = () => {
+  try {
+    const user = localStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
+  } catch (error) {
+    console.error("Error parsing user data:", error);
+    return null;
+  }
+};
 
+const getStoredToken = () => localStorage.getItem("token") || null;
+const getStoredLocation = () => localStorage.getItem("location") || "";
+
+// ---------- Initial State Configuration ---------- //
 const initialState = {
   isLoading: false,
   showAlert: false,
   alertText: "",
   alertType: "",
-  user: user ? user : null,
-  token: token,
-  userLocation: userLocation || "",
+  user: getStoredUser(),  // Safe parsed user data
+  token: getStoredToken(), // Token with null fallback
+  userLocation: getStoredLocation(),
   showSidebar: false,
   isEditing: false,
   editJobId: "",
   position: "",
   company: "",
-  jobLocation: userLocation || "",
+  jobLocation: getStoredLocation() || "", // Ensures string type
   jobTypeOptions: ["full-time", "part-time", "remote", "internship"],
   jobType: "full-time",
   statusOptions: ["interview", "declined", "pending"],
@@ -73,13 +83,12 @@ const initialState = {
 
 const AppContext = createContext();
 
-
 const AppProvider = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   // -------------------axios---------------------- //
   const authFetch = axios.create({
-    baseURL: "https://cuvette-backend-7jzf.onrender.com/api/v1", // Use the correct BASE_URL directly
+    baseURL: BASE_URL,
     withCredentials: true,
   });
 
@@ -128,59 +137,69 @@ const AppProvider = ({ children }) => {
     localStorage.removeItem("location");
   };
 
-// ✅ CORRECT BASE URL (MUST INCLUDE /api/v1)
-const BASE_URL = "https://cuvette-backend-7jzf.onrender.com/api/v1";
-
-const registerUser = async (currentUser) => {
-  dispatch({ type: REGISTER_USER_BEGIN });
-  try {
-    // ✅ Verified endpoint: /api/v1/auth/register
-    const response = await axios.post(
-      `${BASE_URL}/auth/register`,
-      currentUser,
-      {
-        headers: { "Content-Type": "application/json" },
-        withCredentials: true
-      }
-    );
-
-    const { user, token, location } = response.data;
-    dispatch({ type: REGISTER_USER_SUCCESS, payload: { user, token, location } });
-    addUserToLocalStorage({ user, token, location });
-    
-  } catch (error) {
-    // ✅ Enhanced error handling
-    const errorMessage = error.response?.data?.msg || 
-      `Registration failed: ${error.message || 'Server unreachable'}`;
-    dispatch({ type: REGISTER_USER_ERROR, payload: { msg: errorMessage } });
-  }
-  clearAlert();
-};
-
-const loginUser = async (currentUser) => {
-  dispatch({ type: LOGIN_USER_BEGIN });
-  try {
-    // ✅ Verified endpoint: /api/v1/auth/login
-    const response = await axios.post(
-      `${BASE_URL}/auth/login`,
-      currentUser,
-      {
-        headers: { "Content-Type": "application/json" },
-        withCredentials: true
-      }
-    );
-
-    const { user, token, location } = response.data;
-    dispatch({ type: LOGIN_USER_SUCCESS, payload: { user, token, location } });
-    addUserToLocalStorage({ user, token, location });
-    
-  } catch (error) {
-    const errorMessage = error.response?.data?.msg || 
-      `Login failed: ${error.message || 'Check network connection'}`;
-    dispatch({ type: LOGIN_USER_ERROR, payload: { msg: errorMessage } });
-  }
-  clearAlert();
-};
+  const registerUser = async (currentUser) => {
+    dispatch({ type: REGISTER_USER_BEGIN });
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/auth/register`,
+        currentUser,
+        {
+          headers: {
+            "Content-Type": "application/json", // Explicit content type
+          },
+          withCredentials: true, // Include credentials if using cookies
+        }
+      );
+      
+      const { user, token, location } = response.data;
+      dispatch({
+        type: REGISTER_USER_SUCCESS,
+        payload: { user, token, location },
+      });
+      addUserToLocalStorage({ user, token, location });
+      
+    } catch (error) {
+      const errorMessage = error.response?.data?.msg || 
+        "Registration failed. Please try again later.";
+      dispatch({
+        type: REGISTER_USER_ERROR,
+        payload: { msg: errorMessage },
+      });
+    }
+    clearAlert();
+  };
+  
+  const loginUser = async (currentUser) => {
+    dispatch({ type: LOGIN_USER_BEGIN });
+    try {
+      const response = await axios.post(
+        `${BASE_URL}/auth/login`,
+        currentUser,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+  
+      const { user, token, location } = response.data;
+      dispatch({
+        type: LOGIN_USER_SUCCESS,
+        payload: { user, token, location },
+      });
+      addUserToLocalStorage({ user, token, location });
+      
+    } catch (error) {
+      const errorMessage = error.response?.data?.msg || 
+        "Invalid email or password. Please try again.";
+      dispatch({
+        type: LOGIN_USER_ERROR,
+        payload: { msg: errorMessage },
+      });
+    }
+    clearAlert();
+  };
   const updateUser = async (currentUser) => {
     dispatch({ type: UPDATE_USER_BEGIN });
     try {
